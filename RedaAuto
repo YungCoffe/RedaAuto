@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yungcoffe - Redação Automática</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['Space Grotesk', 'monospace'],
+                    },
+                    colors: {
+                        dark: { 900: '#030303', 800: '#0a0a0f', 700: '#12121a', 600: '#1a1a25', 500: '#252532' },
+                        neon: { purple: '#a855f7', violet: '#8b5cf6', pink: '#ec4899', cyan: '#06b6d4' }
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'slide-up': 'slideUp 0.6s ease-out',
+                        'fade-in': 'fadeIn 0.8s ease-out',
+                    },
+                    keyframes: {
+                        float: { '0%, 100%': { transform: 'translateY(0px)' }, '50%': { transform: 'translateY(-20px)' } },
+                        glow: { '0%': { boxShadow: '0 0 20px rgba(168, 85, 247, 0.3)' }, '100%': { boxShadow: '0 0 40px rgba(168, 85, 247, 0.6), 0 0 60px rgba(236, 72, 153, 0.3)' } },
+                        slideUp: { '0%': { transform: 'translateY(30px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body { background: #030303; font-family: 'Outfit', sans-serif; overflow-x: hidden; }
+        
+        .aurora-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background: radial-gradient(ellipse at 20% 20%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 50%),
+                        radial-gradient(ellipse at 50% 50%, rgba(6, 182, 212, 0.05) 0%, transparent 70%), #030303;
+            animation: aurora 20s ease-in-out infinite;
+        }
+        
+        @keyframes aurora {
+            0%, 100% { filter: hue-rotate(0deg) blur(60px); transform: scale(1); }
+            33% { filter: hue-rotate(30deg) blur(80px); transform: scale(1.1); }
+            66% { filter: hue-rotate(-20deg) blur(70px); transform: scale(0.95); }
+        }
+        
+        .glass-panel {
+            background: rgba(18, 18, 26, 0.7);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+        
+        .glass-card {
+            background: rgba(26, 26, 37, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .glass-card:hover {
+            background: rgba(37, 37, 50, 0.8);
+            border-color: rgba(168, 85, 247, 0.3);
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(168, 85, 247, 0.1);
+        }
+        
+        .premium-input {
+            background: rgba(10, 10, 15, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #fff;
+            transition: all 0.3s ease;
+        }
+        
+        .premium-input:focus {
+            border-color: rgba(168, 85, 247, 0.5);
+            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1), 0 0 20px rgba(168, 85, 247, 0.2);
+            outline: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #ec4899 100%);
+            background-size: 200% 200%;
+            animation: gradient-shift 3s ease infinite;
+            border: none;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(168, 85, 247, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+        
+        .loader-ring {
+            display: inline-block; position: relative; width: 20px; height: 20px;
+        }
+        
+        .loader-ring div {
+            box-sizing: border-box; display: block; position: absolute;
+            width: 16px; height: 16px; margin: 2px;
+            border: 2px solid #fff; border-radius: 50%;
+            animation: loader-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            border-color: #fff transparent transparent transparent;
+        }
+        
+        .loader-ring div:nth-child(1) { animation-delay: -0.45s; }
+        .loader-ring div:nth-child(2) { animation-delay: -0.3s; }
+        .loader-ring div:nth-child(3) { animation-delay: -0.15s; }
+        
+        @keyframes loader-ring {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .floating-orb {
+            position: absolute; border-radius: 50%; filter: blur(80px);
+            opacity: 0.4; animation: float 8s ease-in-out infinite; pointer-events: none;
+        }
+        
+        .orb-1 { width: 300px; height: 300px; background: #7c3aed; top: -100px; right: -100px; }
+        .orb-2 { width: 200px; height: 200px; background: #ec4899; bottom: -50px; left: -50px; animation-delay: -4s; }
+        
+        .text-gradient {
+            background: linear-gradient(135deg, #fff 0%, #a855f7 50%, #ec4899 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        
+        .text-glow { text-shadow: 0 0 20px rgba(168, 85, 247, 0.5); }
+        
+        .hidden { display: none !important; }
+        
+        .iframe-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 50; background: #030303;
+        }
+        
+        .iframe-header {
+            position: absolute; top: 0; left: 0; right: 0; height: 60px;
+            background: rgba(18, 18, 26, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 1.5rem; z-index: 51;
+        }
+        
+        .iframe-wrapper {
+            position: absolute; top: 60px; left: 0; right: 0; bottom: 0;
+        }
+        
+        .iframe-wrapper iframe {
+            width: 100%; height: 100%; border: none;
+        }
+        
+        .redacao-card {
+            background: rgba(26, 26, 37, 0.8);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .redacao-card:hover {
+            border-color: rgba(168, 85, 247, 0.5);
+            transform: translateX(8px);
+            box-shadow: 0 10px 30px rgba(168, 85, 247, 0.2);
+        }
+        
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.25rem 0.75rem; border-radius: 9999px;
+            font-size: 0.75rem; font-weight: 600;
+        }
+        
+        .status-pendente { background: rgba(234, 179, 8, 0.2); color: #eab308; border: 1px solid rgba(234, 179, 8, 0.3); }
+        .status-andamento { background: rgba(59, 130, 246, 0.2); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .status-concluida { background: rgba(34, 197, 94, 0.2); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
+        
+        .analyzing-overlay {
+            position: fixed; inset: 0; background: rgba(3, 3, 3, 0.95);
+            z-index: 60; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .scan-line {
+            width: 200px; height: 2px;
+            background: linear-gradient(90deg, transparent, #a855f7, transparent);
+            animation: scan 2s ease-in-out infinite;
+        }
+        
+        @keyframes scan {
+            0%, 100% { transform: translateY(-50px); opacity: 0; }
+            50% { transform: translateY(50px); opacity: 1; }
+        }
+
+        .code-block {
+            background: rgba(10, 10, 15, 0.9);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            font-family: 'Space Grotesk', monospace;
+            font-size: 0.75rem;
+            color: #a855f7;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .step-number {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 0.875rem;
+            flex-shrink: 0;
+        }
+
+        .method-badge {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem 1rem; border-radius: 9999px;
+            font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-iframe { background: rgba(168, 85, 247, 0.2); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3); }
+        .badge-bookmarklet { background: rgba(236, 72, 153, 0.2); color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.3); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="aurora-bg"></div>
+    <div class="floating-orb orb-1"></div>
+    <div class="floating-orb orb-2"></div>
+
+    <!-- TELA 1: INÍCIO -->
+    <div id="telaInicio" class="w-full max-w-lg relative z-10 animate-fade-in">
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center gap-3 mb-4 animate-float">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                    <i class="fas fa-mug-hot text-white text-2xl"></i>
+                </div>
+                <div class="text-left">
+                    <h1 class="text-3xl font-bold tracking-tight text-white">Yungcoffe</h1>
+                    <p class="text-xs text-gray-400 font-mono tracking-widest uppercase">Redação Automática</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-panel rounded-3xl p-8">
+            <div class="mb-6 text-center">
+                <h2 class="text-xl font-bold text-white mb-2">Como deseja acessar?</h2>
+                <p class="text-sm text-gray-400">Ambos os métodos funcionam! O Bookmarklet é mais confiável.</p>
+            </div>
+
+            <div class="space-y-4">
+                <!-- Opção 1: Navegador Embutido -->
+                <button onclick="abrirNavegador()" class="glass-card w-full p-6 rounded-2xl text-left group">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center flex-shrink-0 group-hover:bg-purple-500/30 transition-colors">
+                            <i class="fas fa-globe text-purple-400 text-xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <h3 class="font-bold text-white group-hover:text-purple-300 transition-colors">Navegador Embutido</h3>
+                                <span class="method-badge badge-iframe text-[10px] px-2 py-0.5">Experimental</span>
+                            </div>
+                            <p class="text-sm text-gray-400">Abre o site oficial aqui dentro. Após fazer login, tentamos extrair automaticamente. Se falhar, usamos o bookmarklet como backup.</p>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-600 group-hover:text-purple-400 transition-colors mt-2"></i>
+                    </div>
+                </button>
+
+                <!-- Opção 2: Bookmarklet (RECOMENDADO) -->
+                <button onclick="mostrarBookmarklet()" class="glass-card w-full p-6 rounded-2xl text-left group border-pink-500/30 hover:border-pink-500/60">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-pink-500/20 flex items-center justify-center flex-shrink-0 group-hover:bg-pink-500/30 transition-colors">
+                            <i class="fas fa-bookmark text-pink-400 text-xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <h3 class="font-bold text-white group-hover:text-pink-300 transition-colors">Bookmarklet</h3>
+                                <span class="method-badge badge-bookmarklet text-[10px] px-2 py-0.5">Recomendado</span>
+                            </div>
+                            <p class="text-sm text-gray-400">Código JavaScript que você executa na aba logada da Sala do Futuro. Extrai dados reais 100% funcionando!</p>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-600 group-hover:text-pink-400 transition-colors mt-2"></i>
+                    </div>
+                </button>
+            </div>
+
+            <div class="mt-6 pt-6 border-t border-white/5">
+                <div class="flex items-center gap-2 text-xs text-gray-500">
+                    <i class="fas fa-info-circle text-purple-400"></i>
+                    <span>Dados extraídos em tempo real • Nenhuma informação armazenada</span>
+                </div>
+            </div>
+        </div>
+
+        <p class="text-center mt-8 text-xs text-gray-600 font-mono">
+            Desenvolvido por <span class="text-purple-400 font-semibold">Yungcoffe</span> & <span class="text-purple-400 font-semibold">k4lleb</span>
+        </p>
+    </div>
+
+    <!-- TELA 2: NAVEGADOR EMBUTIDO -->
+    <div id="telaNavegador" class="hidden iframe-container">
+        <div class="iframe-header">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center">
+                    <i class="fas fa-mug-hot text-white text-sm"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-white text-sm">Yungcoffe Navigator</h3>
+                    <p class="text-xs text-gray-400">saladofuturo.educacao.sp.gov.br</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="tentarExtrairIframe()" id="btnExtrairIframe" class="btn-primary px-4 py-2 rounded-lg text-sm font-bold text-white flex items-center gap-2">
+                    <i class="fas fa-download"></i>
+                    Extrair Redações
+                </button>
+                <button onclick="fecharNavegador()" class="w-10 h-10 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="iframe-wrapper">
+            <iframe id="saladoFrame" src="about:blank" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-top-navigation"></iframe>
+        </div>
+        
+        <!-- Overlay de extração -->
+        <div id="overlayExtracao" class="hidden analyzing-overlay">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center mb-6 animate-pulse">
+                <i class="fas fa-robot text-white text-2xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-2">Tentando extrair...</h3>
+            <p class="text-gray-400 mb-8">Verificando se conseguimos acessar os dados</p>
+            <div class="scan-line"></div>
+            <p class="text-xs text-gray-500 mt-8 font-mono">Isso pode falhar devido às proteções do navegador</p>
+        </div>
+
+        <!-- Fallback para bookmarklet -->
+        <div id="fallbackBookmarklet" class="hidden analyzing-overlay">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-600 to-purple-500 flex items-center justify-center mb-6">
+                <i class="fas fa-bookmark text-white text-2xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-2">Precisamos usar o Bookmarklet</h3>
+            <p class="text-gray-400 mb-6 text-center max-w-md">O navegador bloqueou o acesso direto. Isso é normal! Vamos usar o método alternativo que funciona 100%.</p>
+            <button onclick="irParaBookmarkletDoIframe()" class="btn-primary px-8 py-3 rounded-xl font-bold text-white flex items-center gap-2">
+                <i class="fas fa-magic"></i>
+                Usar Bookmarklet Agora
+            </button>
+            <button onclick="continuarMesmoAssim()" class="mt-4 text-sm text-gray-500 hover:text-white transition-colors">
+                Continuar no navegador mesmo assim
+            </button>
+        </div>
+    </div>
+
+    <!-- TELA 3: BOOKMARKLET -->
+    <div id="telaBookmarklet" class="hidden w-full max-w-2xl relative z-10 animate-fade-in">
+        <div class="glass-panel rounded-3xl p-8">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center">
+                        <i class="fas fa-bookmark text-white"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Modo Bookmarklet</h2>
+                        <p class="text-sm text-gray-400">Extração 100% funcional</p>
+                    </div>
+                </div>
+                <button onclick="voltarAoInicio()" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+            </div>
+
+            <div class="space-y-6">
+                <!-- Passo 1 -->
+                <div class="flex gap-4">
+                    <div class="step-number">1</div>
+                    <div class="flex-1">
+                        <h4 class="font-bold text-white mb-2">Acesse a Sala do Futuro</h4>
+                        <p class="text-sm text-gray-400 mb-3">Abra o site oficial em outra aba e faça login normalmente:</p>
+                        <a href="https://saladofuturo.educacao.sp.gov.br/login-alunos" target="_blank" rel="noopener" 
+              
