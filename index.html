@@ -4,403 +4,1085 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yungcoffe - Redação Automática</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Outfit', 'sans-serif'],
-                        mono: ['Space Grotesk', 'monospace'],
-                    },
-                    colors: {
-                        dark: { 900: '#030303', 800: '#0a0a0f', 700: '#12121a', 600: '#1a1a25', 500: '#252532' },
-                        neon: { purple: '#a855f7', violet: '#8b5cf6', pink: '#ec4899', cyan: '#06b6d4' }
-                    },
-                    animation: {
-                        'float': 'float 6s ease-in-out infinite',
-                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'glow': 'glow 2s ease-in-out infinite alternate',
-                        'slide-up': 'slideUp 0.6s ease-out',
-                        'fade-in': 'fadeIn 0.8s ease-out',
-                    },
-                    keyframes: {
-                        float: { '0%, 100%': { transform: 'translateY(0px)' }, '50%': { transform: 'translateY(-20px)' } },
-                        glow: { '0%': { boxShadow: '0 0 20px rgba(168, 85, 247, 0.3)' }, '100%': { boxShadow: '0 0 40px rgba(168, 85, 247, 0.6), 0 0 60px rgba(236, 72, 153, 0.3)' } },
-                        slideUp: { '0%': { transform: 'translateY(30px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
-                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } }
-                    }
-                }
-            }
-        }
-    </script>
-    
     <style>
-        body { background: #030303; font-family: 'Outfit', sans-serif; overflow-x: hidden; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
-        .aurora-bg {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
-            background: radial-gradient(ellipse at 20% 20%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
-                        radial-gradient(ellipse at 80% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 50%),
-                        radial-gradient(ellipse at 50% 50%, rgba(6, 182, 212, 0.05) 0%, transparent 70%), #030303;
-            animation: aurora 20s ease-in-out infinite;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        
-        @keyframes aurora {
-            0%, 100% { filter: hue-rotate(0deg) blur(60px); transform: scale(1); }
-            33% { filter: hue-rotate(30deg) blur(80px); transform: scale(1.1); }
-            66% { filter: hue-rotate(-20deg) blur(70px); transform: scale(0.95); }
+
+        :root {
+            --primary: #8b5cf6;
+            --primary-dark: #7c3aed;
+            --secondary: #ec4899;
+            --dark: #0f0f1a;
+            --darker: #0a0a0f;
+            --card: #161622;
+            --card-hover: #1e1e2d;
+            --border: #2a2a3c;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #22c55e;
+            --warning: #eab308;
+            --discord: #5865F2;
         }
-        
-        .glass-panel {
-            background: rgba(18, 18, 26, 0.7);
-            backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--darker);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
         }
-        
-        .glass-card {
-            background: rgba(26, 26, 37, 0.6);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.06);
+
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(124, 58, 237, 0.05) 0%, transparent 70%);
+            animation: rotate 30s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.4;
+            animation: float 8s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            top: -100px;
+            right: -100px;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(135deg, #ec4899, #f472b6);
+            bottom: -50px;
+            left: -50px;
+            animation-delay: -4s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.05); }
+        }
+
+        .container {
+            max-width: 480px;
+            width: 90%;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 2.5rem;
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.3);
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 20px 40px rgba(139, 92, 246, 0.3); }
+            50% { box-shadow: 0 30px 60px rgba(139, 92, 246, 0.5), 0 0 40px rgba(236, 72, 153, 0.3); }
+        }
+
+        .logo h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 0%, #a78bfa 50%, #f472b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .logo p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 16px;
+            cursor: pointer;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .glass-card:hover {
-            background: rgba(37, 37, 50, 0.8);
-            border-color: rgba(168, 85, 247, 0.3);
-            transform: translateY(-4px) scale(1.01);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(168, 85, 247, 0.1);
-        }
-        
-        .premium-input {
-            background: rgba(10, 10, 15, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: #fff;
-            transition: all 0.3s ease;
-        }
-        
-        .premium-input:focus {
-            border-color: rgba(168, 85, 247, 0.5);
-            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1), 0 0 20px rgba(168, 85, 247, 0.2);
-            outline: none;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #ec4899 100%);
-            background-size: 200% 200%;
-            animation: gradient-shift 3s ease infinite;
-            border: none;
             position: relative;
             overflow: hidden;
+            animation: fadeInUp 0.8s ease-out backwards;
+        }
+
+        .card:nth-child(2) { animation-delay: 0.1s; }
+        .card:nth-child(3) { animation-delay: 0.2s; }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        }
+
+        .card:hover {
+            background: var(--card-hover);
+            border-color: rgba(139, 92, 246, 0.5);
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(139, 92, 246, 0.2),
+                0 0 30px rgba(139, 92, 246, 0.1);
+        }
+
+        .card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+            filter: grayscale(0.5);
+        }
+
+        .card.disabled:hover {
+            transform: none;
+            box-shadow: none;
+            border-color: var(--border);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .card-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover .card-icon {
+            transform: scale(1.1) rotate(-5deg);
+        }
+
+        .card-icon.pink {
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(236, 72, 153, 0.1));
+            color: #ec4899;
+            border: 1px solid rgba(236, 72, 153, 0.3);
+        }
+
+        .card-icon.purple {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.1));
+            color: #8b5cf6;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .card-icon.gray {
+            background: linear-gradient(135deg, rgba(148, 163, 184, 0.2), rgba(148, 163, 184, 0.1));
+            color: #64748b;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge.recommended {
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(236, 72, 153, 0.1));
+            color: #ec4899;
+            border: 1px solid rgba(236, 72, 153, 0.3);
+        }
+
+        .badge.alternative {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.1));
+            color: #8b5cf6;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .badge.unavailable {
+            background: linear-gradient(135deg, rgba(148, 163, 184, 0.2), rgba(148, 163, 184, 0.1));
+            color: #64748b;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+        }
+
+        .card-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            padding-left: 72px;
+        }
+
+        .card-arrow {
+            position: absolute;
+            right: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            opacity: 0.5;
+        }
+
+        .card:hover .card-arrow {
+            color: var(--primary);
+            opacity: 1;
+            transform: translateY(-50%) translateX(4px);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .back-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 12px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            margin-bottom: 24px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .back-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .step {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 28px;
+            animation: fadeInUp 0.6s ease-out backwards;
+        }
+
+        .step:nth-child(2) { animation-delay: 0.1s; }
+        .step:nth-child(3) { animation-delay: 0.2s; }
+        .step:nth-child(4) { animation-delay: 0.3s; }
+
+        .step-num {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-content h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .step-content p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .link-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.05));
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            color: #a78bfa;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
             transition: all 0.3s ease;
         }
-        
+
+        .link-btn:hover {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.1));
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);
+        }
+
+        .discord-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, rgba(88, 101, 242, 0.15), rgba(88, 101, 242, 0.05));
+            border: 1px solid rgba(88, 101, 242, 0.4);
+            border-radius: 14px;
+            color: #5865F2;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            margin-bottom: 16px;
+            animation: fadeInUp 0.8s ease-out 0.3s backwards;
+        }
+
+        .discord-btn:hover {
+            background: linear-gradient(135deg, rgba(88, 101, 242, 0.25), rgba(88, 101, 242, 0.15));
+            border-color: #5865F2;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(88, 101, 242, 0.3);
+            color: #fff;
+        }
+
+        .discord-btn i {
+            font-size: 1.2rem;
+        }
+
+        .code-box {
+            background: var(--darker);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.75rem;
+            color: #a78bfa;
+            line-height: 1.8;
+            max-height: 240px;
+            overflow-y: auto;
+            margin: 16px 0;
+            position: relative;
+        }
+
+        .code-box::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .code-box::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .code-box::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary), var(--secondary));
+            background-size: 200% 200%;
+            border: none;
+            border-radius: 14px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            animation: gradient-shift 3s ease infinite;
+        }
+
         @keyframes gradient-shift {
             0%, 100% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
         }
-        
+
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(168, 85, 247, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            transform: translateY(-3px);
+            box-shadow: 
+                0 20px 40px rgba(139, 92, 246, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
         }
-        
-        .loader-ring {
-            display: inline-block; position: relative; width: 20px; height: 20px;
+
+        .btn-primary:active {
+            transform: translateY(-1px);
         }
-        
-        .loader-ring div {
-            box-sizing: border-box; display: block; position: absolute;
-            width: 16px; height: 16px; margin: 2px;
-            border: 2px solid #fff; border-radius: 50%;
-            animation: loader-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-            border-color: #fff transparent transparent transparent;
+
+        .waiting-box {
+            display: none;
         }
-        
-        .loader-ring div:nth-child(1) { animation-delay: -0.45s; }
-        .loader-ring div:nth-child(2) { animation-delay: -0.3s; }
-        .loader-ring div:nth-child(3) { animation-delay: -0.15s; }
-        
-        @keyframes loader-ring {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+
+        .redacao-list {
+            margin-bottom: 24px;
         }
-        
-        .floating-orb {
-            position: absolute; border-radius: 50%; filter: blur(80px);
-            opacity: 0.4; animation: float 8s ease-in-out infinite; pointer-events: none;
-        }
-        
-        .orb-1 { width: 300px; height: 300px; background: #7c3aed; top: -100px; right: -100px; }
-        .orb-2 { width: 200px; height: 200px; background: #ec4899; bottom: -50px; left: -50px; animation-delay: -4s; }
-        
-        .text-gradient {
-            background: linear-gradient(135deg, #fff 0%, #a855f7 50%, #ec4899 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-        }
-        
-        .text-glow { text-shadow: 0 0 20px rgba(168, 85, 247, 0.5); }
-        
-        .hidden { display: none !important; }
-        
-        .iframe-container {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 50; background: #030303;
-        }
-        
-        .iframe-header {
-            position: absolute; top: 0; left: 0; right: 0; height: 60px;
-            background: rgba(18, 18, 26, 0.95);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 1.5rem; z-index: 51;
-        }
-        
-        .iframe-wrapper {
-            position: absolute; top: 60px; left: 0; right: 0; bottom: 0;
-        }
-        
-        .iframe-wrapper iframe {
-            width: 100%; height: 100%; border: none;
-        }
-        
-        .redacao-card {
-            background: rgba(26, 26, 37, 0.8);
-            border: 1px solid rgba(168, 85, 247, 0.2);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
+
+        .redacao-item {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 12px;
             transition: all 0.3s ease;
-            cursor: pointer;
+            animation: fadeInUp 0.5s ease-out backwards;
         }
-        
-        .redacao-card:hover {
-            border-color: rgba(168, 85, 247, 0.5);
+
+        .redacao-item:hover {
+            border-color: rgba(139, 92, 246, 0.4);
             transform: translateX(8px);
-            box-shadow: 0 10px 30px rgba(168, 85, 247, 0.2);
-        }
-        
-        .status-badge {
-            display: inline-flex; align-items: center; gap: 0.5rem;
-            padding: 0.25rem 0.75rem; border-radius: 9999px;
-            font-size: 0.75rem; font-weight: 600;
-        }
-        
-        .status-pendente { background: rgba(234, 179, 8, 0.2); color: #eab308; border: 1px solid rgba(234, 179, 8, 0.3); }
-        .status-andamento { background: rgba(59, 130, 246, 0.2); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
-        .status-concluida { background: rgba(34, 197, 94, 0.2); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
-        
-        .analyzing-overlay {
-            position: fixed; inset: 0; background: rgba(3, 3, 3, 0.95);
-            z-index: 60; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            backdrop-filter: blur(10px);
-        }
-        
-        .scan-line {
-            width: 200px; height: 2px;
-            background: linear-gradient(90deg, transparent, #a855f7, transparent);
-            animation: scan 2s ease-in-out infinite;
-        }
-        
-        @keyframes scan {
-            0%, 100% { transform: translateY(-50px); opacity: 0; }
-            50% { transform: translateY(50px); opacity: 1; }
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
-        .code-block {
-            background: rgba(10, 10, 15, 0.9);
-            border: 1px solid rgba(168, 85, 247, 0.2);
-            border-radius: 0.75rem;
-            padding: 1rem;
-            font-family: 'Space Grotesk', monospace;
+        .redacao-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .redacao-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.4;
+        }
+
+        .redacao-tema {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+
+        .status {
+            padding: 6px 14px;
+            border-radius: 20px;
             font-size: 0.75rem;
-            color: #a855f7;
-            overflow-x: auto;
-            white-space: pre-wrap;
-            word-break: break-all;
-        }
-
-        .step-number {
-            width: 28px; height: 28px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #7c3aed, #a855f7);
-            color: white;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: bold; font-size: 0.875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
             flex-shrink: 0;
         }
 
-        .method-badge {
-            display: inline-flex; align-items: center; gap: 0.5rem;
-            padding: 0.5rem 1rem; border-radius: 9999px;
-            font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+        .status.pendente {
+            background: rgba(234, 179, 8, 0.1);
+            color: #eab308;
+            border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+
+        .status.andamento {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .status.concluida {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .redacao-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .redacao-meta i {
+            margin-right: 6px;
+        }
+
+        .config-box {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .config-item label {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .config-item input {
+            width: 100%;
+            padding: 16px;
+            background: var(--darker);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 1.3rem;
+            font-weight: 700;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .config-item input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 500;
             letter-spacing: 0.05em;
         }
 
-        .badge-iframe { background: rgba(168, 85, 247, 0.2); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3); }
-        .badge-bookmarklet { background: rgba(236, 72, 153, 0.2); color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.3); }
+        .footer span {
+            color: #a78bfa;
+            font-weight: 700;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--card);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 16px;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            max-width: 400px;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .toast-icon.success {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+        }
+
+        .toast-icon.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .toast-content h4 {
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: var(--text);
+        }
+
+        .toast-content p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                width: 95%;
+                padding: 20px 16px;
+            }
+
+            .logo h1 {
+                font-size: 1.8rem;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .card-desc {
+                padding-left: 0;
+                margin-top: 12px;
+            }
+
+            .config-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body>
+    <div class="bg-animation"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
 
-    <div class="aurora-bg"></div>
-    <div class="floating-orb orb-1"></div>
-    <div class="floating-orb orb-2"></div>
-
-    <!-- TELA 1: INÍCIO -->
-    <div id="telaInicio" class="w-full max-w-lg relative z-10 animate-fade-in">
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center gap-3 mb-4 animate-float">
-                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
-                    <i class="fas fa-mug-hot text-white text-2xl"></i>
-                </div>
-                <div class="text-left">
-                    <h1 class="text-3xl font-bold tracking-tight text-white">Yungcoffe</h1>
-                    <p class="text-xs text-gray-400 font-mono tracking-widest uppercase">Redação Automática</p>
-                </div>
+    <div id="tela-inicio" class="container">
+        <div class="logo">
+            <div class="logo-icon">
+                <i class="fas fa-mug-hot"></i>
             </div>
+            <h1>Yungcoffe</h1>
+            <p>Redação Automática</p>
         </div>
 
-        <div class="glass-panel rounded-3xl p-8">
-            <div class="mb-6 text-center">
-                <h2 class="text-xl font-bold text-white mb-2">Como deseja acessar?</h2>
-                <p class="text-sm text-gray-400">Ambos os métodos funcionam! O Bookmarklet é mais confiável.</p>
-            </div>
-
-            <div class="space-y-4">
-                <!-- Opção 1: Navegador Embutido -->
-                <button onclick="abrirNavegador()" class="glass-card w-full p-6 rounded-2xl text-left group">
-                    <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center flex-shrink-0 group-hover:bg-purple-500/30 transition-colors">
-                            <i class="fas fa-globe text-purple-400 text-xl"></i>
-                        </div>
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2 mb-1">
-                                <h3 class="font-bold text-white group-hover:text-purple-300 transition-colors">Navegador Embutido</h3>
-                                <span class="method-badge badge-iframe text-[10px] px-2 py-0.5">Experimental</span>
-                            </div>
-                            <p class="text-sm text-gray-400">Abre o site oficial aqui dentro. Após fazer login, tentamos extrair automaticamente. Se falhar, usamos o bookmarklet como backup.</p>
-                        </div>
-                        <i class="fas fa-chevron-right text-gray-600 group-hover:text-purple-400 transition-colors mt-2"></i>
-                    </div>
-                </button>
-
-                <!-- Opção 2: Bookmarklet (RECOMENDADO) -->
-                <button onclick="mostrarBookmarklet()" class="glass-card w-full p-6 rounded-2xl text-left group border-pink-500/30 hover:border-pink-500/60">
-                    <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 rounded-xl bg-pink-500/20 flex items-center justify-center flex-shrink-0 group-hover:bg-pink-500/30 transition-colors">
-                            <i class="fas fa-bookmark text-pink-400 text-xl"></i>
-                        </div>
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2 mb-1">
-                                <h3 class="font-bold text-white group-hover:text-pink-300 transition-colors">Bookmarklet</h3>
-                                <span class="method-badge badge-bookmarklet text-[10px] px-2 py-0.5">Recomendado</span>
-                            </div>
-                            <p class="text-sm text-gray-400">Código JavaScript que você executa na aba logada da Sala do Futuro. Extrai dados reais 100% funcionando!</p>
-                        </div>
-                        <i class="fas fa-chevron-right text-gray-600 group-hover:text-pink-400 transition-colors mt-2"></i>
-                    </div>
-                </button>
-            </div>
-
-            <div class="mt-6 pt-6 border-t border-white/5">
-                <div class="flex items-center gap-2 text-xs text-gray-500">
-                    <i class="fas fa-info-circle text-purple-400"></i>
-                    <span>Dados extraídos em tempo real • Nenhuma informação armazenada</span>
+        <div class="card" onclick="mostrarTela('bookmarklet')">
+            <div class="card-header">
+                <div class="card-icon pink">
+                    <i class="fas fa-bookmark"></i>
+                </div>
+                <div class="card-title">
+                    Modo Bookmarklet
+                    <span class="badge recommended">Recomendado</span>
                 </div>
             </div>
+            <p class="card-desc">
+                Extração silenciosa em segundo plano. Copie o código, cole no console da Sala do Futuro e pronto!
+            </p>
+            <i class="fas fa-chevron-right card-arrow"></i>
         </div>
 
-        <p class="text-center mt-8 text-xs text-gray-600 font-mono">
-            Desenvolvido por <span class="text-purple-400 font-semibold">Yungcoffe</span> & <span class="text-purple-400 font-semibold">k4lleb</span>
-        </p>
-    </div>
-
-    <!-- TELA 2: NAVEGADOR EMBUTIDO -->
-    <div id="telaNavegador" class="hidden iframe-container">
-        <div class="iframe-header">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center">
-                    <i class="fas fa-mug-hot text-white text-sm"></i>
+        <div class="card disabled">
+            <div class="card-header">
+                <div class="card-icon gray">
+                    <i class="fas fa-globe"></i>
                 </div>
-                <div>
-                    <h3 class="font-bold text-white text-sm">Yungcoffe Navigator</h3>
-                    <p class="text-xs text-gray-400">saladofuturo.educacao.sp.gov.br</p>
+                <div class="card-title">
+                    Navegador Embutido
+                    <span class="badge unavailable">Indisponível</span>
                 </div>
             </div>
-            <div class="flex items-center gap-3">
-                <button onclick="tentarExtrairIframe()" id="btnExtrairIframe" class="btn-primary px-4 py-2 rounded-lg text-sm font-bold text-white flex items-center gap-2">
-                    <i class="fas fa-download"></i>
-                    Extrair Redações
-                </button>
-                <button onclick="fecharNavegador()" class="w-10 h-10 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
-        
-        <div class="iframe-wrapper">
-            <iframe id="saladoFrame" src="about:blank" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-top-navigation"></iframe>
-        </div>
-        
-        <!-- Overlay de extração -->
-        <div id="overlayExtracao" class="hidden analyzing-overlay">
-            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center mb-6 animate-pulse">
-                <i class="fas fa-robot text-white text-2xl"></i>
-            </div>
-            <h3 class="text-2xl font-bold text-white mb-2">Tentando extrair...</h3>
-            <p class="text-gray-400 mb-8">Verificando se conseguimos acessar os dados</p>
-            <div class="scan-line"></div>
-            <p class="text-xs text-gray-500 mt-8 font-mono">Isso pode falhar devido às proteções do navegador</p>
+            <p class="card-desc">
+                Esta opção está temporariamente indisponível.
+            </p>
         </div>
 
-        <!-- Fallback para bookmarklet -->
-        <div id="fallbackBookmarklet" class="hidden analyzing-overlay">
-            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-600 to-purple-500 flex items-center justify-center mb-6">
-                <i class="fas fa-bookmark text-white text-2xl"></i>
-            </div>
-            <h3 class="text-2xl font-bold text-white mb-2">Precisamos usar o Bookmarklet</h3>
-            <p class="text-gray-400 mb-6 text-center max-w-md">O navegador bloqueou o acesso direto. Isso é normal! Vamos usar o método alternativo que funciona 100%.</p>
-            <button onclick="irParaBookmarkletDoIframe()" class="btn-primary px-8 py-3 rounded-xl font-bold text-white flex items-center gap-2">
-                <i class="fas fa-magic"></i>
-                Usar Bookmarklet Agora
-            </button>
-            <button onclick="continuarMesmoAssim()" class="mt-4 text-sm text-gray-500 hover:text-white transition-colors">
-                Continuar no navegador mesmo assim
-            </button>
+        <a href="https://discord.gg/GWdpj2prvk" target="_blank" class="discord-btn">
+            <i class="fab fa-discord"></i> Entrar no Discord
+        </a>
+
+        <div class="footer">
+            <span>Yungcoffe</span> & <span>k4lleb</span> • v3.0
         </div>
     </div>
 
-    <!-- TELA 3: BOOKMARKLET -->
-    <div id="telaBookmarklet" class="hidden w-full max-w-2xl relative z-10 animate-fade-in">
-        <div class="glass-panel rounded-3xl p-8">
-            <div class="flex items-center justify-between mb-6">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center">
-                        <i class="fas fa-bookmark text-white"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-xl font-bold text-white">Modo Bookmarklet</h2>
-                        <p class="text-sm text-gray-400">Extração 100% funcional</p>
-                    </div>
+    <div id="tela-bookmarklet" class="container hidden">
+        <button class="back-btn" onclick="mostrarTela('inicio')">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </button>
+        
+        <div class="logo" style="margin-bottom: 30px;">
+            <div class="logo-icon" style="width: 60px; height: 60px; font-size: 1.8rem;">
+                <i class="fas fa-bookmark"></i>
+            </div>
+            <h1 style="font-size: 1.6rem;">Bookmarklet</h1>
+            <p>Extração automática</p>
+        </div>
+
+        <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+                <h3>Acesse a Sala do Futuro</h3>
+                <p>Abra em uma nova aba e faça login normalmente:</p>
+                <a href="https://saladofuturo.educacao.sp.gov.br/login-alunos" target="_blank" class="link-btn">
+                    <i class="fas fa-external-link-alt"></i> Abrir Sala do Futuro
+                </a>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+                <h3>Copie o código mágico</h3>
+                <p>Clique no botão abaixo para copiar o script:</p>
+                <div class="code-box" id="codigo">
+javascript:(function(){
+    var b=document.getElementById('btn-inj');
+    if(b) b.remove();
+    b=document.createElement('div');
+    b.id='btn-inj';
+    b.innerHTML=`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:10px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2))"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg><span style="position:relative;z-index:2">INJETAR CONTEÚDO</span><div class="shimmer"></div>`;
+    var style=`position:fixed;bottom:40px;left:50%;transform:translateX(-50%);z-index:999999;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:16px 32px;font-weight:700;border-radius:16px;font-family:'Inter','SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;cursor:pointer;border:1px solid rgba(255,255,255,0.3);box-shadow:0 20px 40px rgba(102,126,234,0.4),0 0 0 1px rgba(255,255,255,0.1) inset,0 -2px 10px rgba(255,255,255,0.1) inset;transition:all 0.4s cubic-bezier(0.4,0,0.2,1);text-transform:uppercase;letter-spacing:1.5px;user-select:none;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);overflow:hidden`;
+    b.style=style;
+    var shimmerStyle=document.createElement('style');
+    shimmerStyle.textContent=`@keyframes shimmer{0%{transform:translateX(-100%) rotate(45deg)}100%{transform:translateX(200%) rotate(45deg)}}@keyframes pulse{0%,100%{box-shadow:0 20px 40px rgba(102,126,234,0.4),0 0 0 1px rgba(255,255,255,0.1) inset}50%{box-shadow:0 25px 50px rgba(102,126,234,0.6),0 0 0 1px rgba(255,255,255,0.2) inset}}#btn-inj .shimmer{position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.3) 50%,transparent 100%);animation:shimmer 3s infinite;pointer-events:none}#btn-inj{animation:pulse 2s ease-in-out infinite}`;
+    document.head.appendChild(shimmerStyle);
+    b.onmouseover=function(){this.style.transform='translateX(-50%) translateY(-3px) scale(1.02)';this.style.boxShadow='0 30px 60px rgba(102,126,234,0.5),0 0 0 1px rgba(255,255,255,0.2) inset,0 -2px 10px rgba(255,255,255,0.2) inset';this.style.filter='brightness(1.1)'};
+    b.onmouseout=function(){this.style.transform='translateX(-50%) translateY(0) scale(1)';this.style.boxShadow='0 20px 40px rgba(102,126,234,0.4),0 0 0 1px rgba(255,255,255,0.1) inset,0 -2px 10px rgba(255,255,255,0.1) inset';this.style.filter='brightness(1)'};
+    b.onmousedown=function(){this.style.transform='translateX(-50%) translateY(1px) scale(0.98)';this.style.transition='all 0.1s ease'};
+    b.onmouseup=function(){this.style.transform='translateX(-50%) translateY(-3px) scale(1.02)';this.style.transition='all 0.4s cubic-bezier(0.4,0,0.2,1)'};
+    document.body.appendChild(b);
+    b.onclick=function(){
+        var t=prompt('Digite o conteúdo para injetar:');
+        if(!t)return;
+        var btnAdd=document.querySelector('button')&&Array.from(document.querySelectorAll('button')).find(el=>el.textContent.includes('Adicionar parágrafo'));
+        if(btnAdd)btnAdd.click();
+        setTimeout(function(){
+            var e=document.querySelector('.ql-editor')||document.querySelector('[contenteditable="true"]');
+            if(e){
+                e.focus();
+                document.execCommand('insertText',false,t);
+                e.dispatchEvent(new Event('input',{bubbles:true}));
+                var notif=document.createElement('div');
+                notif.style=`position:fixed;top:20px;right:20px;background:linear-gradient(135deg,#11998e,#38ef7d);color:white;padding:16px 24px;border-radius:12px;font-family:'Inter',sans-serif;font-weight:600;box-shadow:0 10px 30px rgba(17,153,142,0.3);z-index:9999999;animation:slideIn 0.5s ease;display:flex;align-items:center;gap:10px`;
+                notif.innerHTML=`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg><span>Conteúdo injetado com sucesso!</span>`;
+                document.body.appendChild(notif);
+                setTimeout(()=>{notif.style.animation='slideOut 0.5s ease forwards';setTimeout(()=>notif.remove(),500)},2000)
+            }else{
+                alert('Erro: Abra um parágrafo no editor antes de injetar.')
+            }
+        },500)
+    };
+    var notifStyle=document.createElement('style');
+    notifStyle.textContent=`@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}@keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}`;
+    document.head.appendChild(notifStyle)
+})();
                 </div>
-                <button onclick="voltarAoInicio()" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
-                    <i class="fas fa-arrow-left"></i>
+                <button class="btn-primary" onclick="copiarCodigo()">
+                    <i class="fas fa-copy"></i> Copiar Código
                 </button>
             </div>
+        </div>
 
-            <div class="space-y-6">
-                <!-- Passo 1 -->
-                <div class="flex gap-4">
-                    <div class="step-number">1</div>
-                    <div class="flex-1">
-                        <h4 class="font-bold text-white mb-2">Acesse a Sala do Futuro</h4>
-                        <p class="text-sm text-gray-400 mb-3">Abra o site oficial em outra aba e faça login normalmente:</p>
-                        <a href="https://saladofuturo.educacao.sp.gov.br/login-alunos" target="_blank" rel="noopener" 
-              
+        <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+                <h3>Execute na Sala do Futuro</h3>
+                <p>Na aba logada, pressione <strong>tres tracinhos</strong> → favoritos → adicionar favoritos → cole o script</p>
+            </div>
+        </div>
+    </div>
+        <div id="tela-redacoes" class="container hidden">
+        <button class="back-btn" onclick="mostrarTela('inicio')">
+            <i class="fas fa-arrow-left"></i> Nova Extração
+        </button>
+        
+        <div class="logo" style="margin-bottom: 30px;">
+            <div class="logo-icon" style="width: 60px; height: 60px; font-size: 1.8rem;">
+                <i class="fas fa-check"></i>
+            </div>
+            <h1 style="font-size: 1.6rem;"><span id="contador">0</span> Redações</h1>
+            <p id="timestamp">Extraídas com sucesso</p>
+        </div>
+
+        <div class="redacao-list" id="lista-redacoes"></div>
+
+        <div class="config-box">
+            <div class="config-grid">
+                <div class="config-item">
+                    <label>Tempo Mínimo (min)</label>
+                    <input type="number" id="tempo-min" value="35" min="5" max="180">
+                </div>
+                <div class="config-item">
+                    <label>Tempo Máximo (min)</label>
+                    <input type="number" id="tempo-max" value="55" min="5" max="180">
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-primary" onclick="iniciarAutomacao()">
+            <i class="fas fa-play"></i> Iniciar Automação
+        </button>
+    </div>
+
+    <div id="toast" class="toast">
+        <div class="toast-icon success" id="toast-icon">
+            <i class="fas fa-check"></i>
+        </div>
+        <div class="toast-content">
+            <h4 id="toast-title">Sucesso!</h4>
+            <p id="toast-message">Operação realizada</p>
+        </div>
+    </div>
+
+    <script>
+        function mostrarTela(nome) {
+            document.querySelectorAll('[id^="tela-"]').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tela-' + nome).classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        function showToast(title, message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            const titleEl = document.getElementById('toast-title');
+            const messageEl = document.getElementById('toast-message');
+
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+
+            if (type === 'error') {
+                icon.className = 'toast-icon error';
+                icon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+            } else {
+                icon.className = 'toast-icon success';
+                icon.innerHTML = '<i class="fas fa-check"></i>';
+            }
+
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 4000);
+        }
+
+        function copiarCodigo() {
+            const codigo = document.getElementById('codigo').textContent.trim();
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(codigo).then(() => {
+                    showToast('Código copiado!', 'Cole no console da Sala do Futuro (F12)');
+                }).catch(() => fallbackCopy(codigo));
+            } else {
+                fallbackCopy(codigo);
+            }
+        }
+
+        function fallbackCopy(texto) {
+            const textarea = document.createElement('textarea');
+            textarea.value = texto;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                document.execCommand('copy');
+                showToast('Código copiado!', 'Use Ctrl+V no console');
+            } catch(e) {
+                showToast('Erro ao copiar', 'Selecione manualmente e copie', 'error');
+            }
+            
+            document.body.removeChild(textarea);
+        }
+
+        let redacoesAtuais = [];
+
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.source === 'YUNGCOFFE_EXTRACTOR' && e.data.redacoes) {
+                mostrarRedacoes(e.data.redacoes);
+            }
+        });
+
+        setInterval(function() {
+            try {
+                const data = localStorage.getItem('yungcoffe_data');
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    if (parsed.redacoes) {
+                        localStorage.removeItem('yungcoffe_data');
+                        mostrarRedacoes(parsed.redacoes);
+                    }
+                }
+            } catch(e) {}
+        }, 1000);
+
+        if (typeof BroadcastChannel !== 'undefined') {
+            try {
+                const bc = new BroadcastChannel('yungcoffe');
+                bc.onmessage = function(e) {
+                    if (e.data && e.data.redacoes) {
+                        mostrarRedacoes(e.data.redacoes);
+                    }
+                };
+            } catch(e) {}
+        }
+
+        function mostrarRedacoes(redacoes) {
+            redacoesAtuais = redacoes;
+            
+            document.getElementById('contador').textContent = redacoes.length;
+            document.getElementById('timestamp').textContent = new Date().toLocaleString('pt-BR');
+            
+            const container = document.getElementById('lista-redacoes');
+            container.innerHTML = '';
+
+            if (redacoes.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>Nenhuma redação encontrada</p>
+                    </div>
+                `;
+                mostrarTela('redacoes');
+                return;
+            }
+
+            redacoes.forEach(function(r, i) {
+                const status = r.status || 'pendente';
+                const div = document.createElement('div');
+                div.className = 'redacao-item';
+                div.style.animationDelay = (i * 0.1) + 's';
+                div.innerHTML = `
+                    <div class="redacao-header">
+                        <div>
+                            <div class="redacao-title">${escapeHtml(r.titulo || 'Sem título')}</div>
+                            <div class="redacao-tema">${escapeHtml(r.tema || 'Sem tema')}</div>
+                        </div>
+                        <span class="status ${status}">${status}</span>
+                    </div>
+                    <div class="redacao-meta">
+                        ${r.prazo ? '<span><i class="far fa-calendar"></i> ' + escapeHtml(r.prazo) + '</span>' : ''}
+                        <span><i class="fas fa-fingerprint"></i> ' + (r.id || i) + '</span>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            mostrarTela('redacoes');
+            showToast('Dados recebidos!', redacoes.length + ' redações extraídas com sucesso');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function iniciarAutomacao() {
+            const min = parseInt(document.getElementById('tempo-min').value);
+            const max = parseInt(document.getElementById('tempo-max').value);
+            
+            if (min >= max) {
+                showToast('Configuração inválida', 'Tempo mínimo deve ser menor que máximo', 'error');
+                return;
+            }
+
+            if (redacoesAtuais.length === 0) {
+                showToast('Sem dados', 'Nenhuma redação carregada', 'error');
+                return;
+            }
+
+            const tempos = redacoesAtuais.map(() => Math.floor(Math.random() * (max - min + 1)) + min);
+            const total = tempos.reduce((a, b) => a + b, 0);
+
+            showToast('Automação pronta!', `${redacoesAtuais.length} redações, ~${total} min total`);
+            
+            setTimeout(() => {
+                alert(`🚀 Automação Configurada!\n\nRedações: ${redacoesAtuais.length}\nTempo estimado: ~${total} minutos\n\nPronto para iniciar!`);
+            }, 600);
+        }
+
+        console.log('✨ Yungcoffe v3.0 carregado com sucesso!');
+    </script>
+</body>
+</html>
